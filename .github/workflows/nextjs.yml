@@ -26,8 +26,9 @@ concurrency:
   cancel-in-progress: false
   
 defaults:
- run:
-  working-directory: ./next-test-p5
+  run:
+    working-directory: ./next-test-p5/
+
 jobs:
   # Build job
   build:
