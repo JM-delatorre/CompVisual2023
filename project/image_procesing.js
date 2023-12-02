@@ -76,6 +76,8 @@ let selected_mask = 0;
 let selected_image = 0;
 let selected_histogram = 4;
 let kernel_shader;
+let brightness_shader;
+let brightness = 1;
 
 // Defining other global variables
 const CANVAS_SIZE = 400;
@@ -128,8 +130,9 @@ function setup() {
     loaded_images[i].loadPixels();
   }
 
-  // Setting the kernel shader
+  // Setting the kernel shader and the brightness shader
   kernel_shader = loadShader('./assets/shaders/kernel.vert', './assets/shaders/kernel.frag');
+  brightness_shader = loadShader('./assets/shaders/kernel.vert', './assets/shaders/brightness.frag');
 
   // Set the current image to the first one in the loaded_images array
   resetImage();
@@ -355,7 +358,10 @@ function getPixel(pixelX, pixelY) {
  * Used to apply a mask globally to the current image
 */
 function applyGlobalMask() {
-  if (selected_mask > 0) current_image = convolveImage(current_image);
+  if (selected_mask > 0) {
+    current_image = convolveImage(current_image);
+    current_image.loadPixels();
+  }
 }
 
 /**
@@ -376,6 +382,7 @@ function applyLocalMask() {
   small_image = convolveImage(small_image);
 
   current_image.copy(small_image, 0, 0, FILES_ZONES_HEIGHT, FILES_ZONES_HEIGHT, posX, posY, FILES_ZONES_HEIGHT, FILES_ZONES_HEIGHT);
+  current_image.loadPixels();
 }
 
 /**
@@ -409,6 +416,35 @@ function convolveImage(image) {
   buffer.remove();
 
   return modified_image;
+}
+
+function applyBrightness() {
+  let buffer = createGraphics(masking_canvas.width, masking_canvas.height, WEBGL);
+
+  // Copy the shader to the buffer's context
+  let copiedShader = brightness_shader.copyToContext(buffer);
+
+  // Passing the shader uniforms
+  copiedShader.setUniform('uTexture', current_image);
+  copiedShader.setUniform('uBrightness', brightness);
+  
+  buffer.shader(copiedShader);
+
+  // Draw a rectangle that covers the whole canvas
+  push();
+  buffer.translate(-current_image.width / 2, -current_image.height / 2);
+  buffer.rect(0, 0, current_image.width, current_image.height);
+  pop();
+
+  // Get the processed image of the buffer
+  current_image = buffer.get();
+  current_image.loadPixels();
+
+  // Close the buffer
+  buffer.remove();
+
+  histogram_changed = true;
+  brightness = 1;
 }
 
 /**
@@ -446,40 +482,6 @@ function switchMask() {
   }
 
   mask_title = local_mode ? masks[selected_mask][0] + ' - local' : masks[selected_mask][0] + ' - global';
-}
-
-/**
- * Used to operate the brightness of the current image
- * @param {number} value - The value to be added to the current image
-*/
-function operateBrightness(value) {
-  current_image.loadPixels();
-  let [r, g, b] = [0, 0, 0];
-
-  for (let i = 0; i < current_image.pixels.length; i += 4) {
-    [r, g, b] = [current_image.pixels[i], current_image.pixels[i + 1], current_image.pixels[i + 2]];
-
-    current_image.pixels[i] = constrain(r + value, 0, 255);
-    current_image.pixels[i + 1] = constrain(g + value, 0, 255);
-    current_image.pixels[i + 2] = constrain(b + value, 0, 255);
-  }
-
-  current_image.updatePixels();
-}
-
-/**
- * Used to increase or decrease the brightness of the current image
- * @param {boolean} increment - True to increase the brightness, false to decrease it
-*/
-function controlBrightness(increment = true) {
-  if (increment) {
-    operateBrightness(5);
-  }
-  else {
-    operateBrightness(-5);
-  }
-
-  histogram_changed = true;
 }
 
 /**
@@ -553,10 +555,12 @@ function keyPressed() {
       clearMask();
       break;
     case 'v':
-      controlBrightness();
+      brightness -= 0.1;
+      applyBrightness();
       break;
     case 'b':
-      controlBrightness(false);
+      brightness += 0.1;
+      applyBrightness();
       break;
     case 'r':
       clearMask();

@@ -3,7 +3,6 @@
 #endif
 
 varying vec2 vTexCoord;
-varying vec3 vNormal;
 
 uniform sampler2D uTexture;
 uniform float uKernel[25];
@@ -17,6 +16,7 @@ void main() {
   vec4 color = texture2D(uTexture, vTexCoord);
 
   // Setting the offset for the kernel
+  // Kernel is 5x5, so we need 25 offsets labeled from A to Y
   // A B C D E
   // F G H I J
   // K L M N O
