@@ -81,10 +81,11 @@ function sketch(p5) {
   let selected_image = 0;
   let selected_histogram = 4;
   let kernel_shader;
+  let brightness_shader;
   let brightness = 1;
 
   // Defining other global variables
-  const CANVAS_SIZE = 400;
+  const CANVAS_SIZE = 800;
   const HISTOGRAM_HEIGHT = 200;
   const FILES_ZONES_HEIGHT = 100;
   let FONT;
@@ -96,7 +97,7 @@ function sketch(p5) {
 
   p5.preload = () => {
     // Loading the font
-    FONT = p5.loadFont('./assets/fonts/Roboto-Regular.ttf');
+    FONT = p5.loadFont('./assets/fonts/Lato-Regular.ttf');
 
     // Loading the images
     for (let i = 0; i < ORIGINAL_IMAGES.length; i++) {
@@ -105,6 +106,9 @@ function sketch(p5) {
   }
 
   p5.setup = () => {
+    
+    // p5.createCanvas(p5.parent.offsetWidth, p5.parent.offsetHeight).parent('canvas-container');
+    // window.addEventListener('resize', () => resizeCanvas(p5));
     p5.createCanvas(CANVAS_SIZE, CANVAS_SIZE + HISTOGRAM_HEIGHT);
     p5.pixelDensity(1);
 
@@ -166,18 +170,20 @@ function sketch(p5) {
   }
 
   p5.updateWithProps = props => {
-    if (props.rotation) {
-      rotation = (props.rotation * Math.PI) / 180;
-    }
+    // for reading props passed to componend wrapper
 
-    if (props.width) {
-      canvasWidth = props.width
+    // if (props.rotation) {
+    //   rotation = (props.rotation * Math.PI) / 180;
+    // }
 
-    }
+    // if (props.width) {
+    //   canvasWidth = props.width
 
-    if (props.height) {
-      canvasHeight = props.height
-    }
+    // }
+
+    // if (props.height) {
+    //   canvasHeight = props.height
+    // }
   };
 
   /**
@@ -279,7 +285,7 @@ function sketch(p5) {
   function scaleDownHistograms() {
     // Iterate over the histograms and scale them down
     for (let i = 0; i < histograms.length; i++) {
-      let scale_factor = histogram_canvas.height / max(...histograms[i]);
+      let scale_factor = histogram_canvas.height / Math.max(...histograms[i]);
 
       for (let j = 0; j < histograms[i].length; j++) {
         histograms[i][j] *= scale_factor;
@@ -306,22 +312,22 @@ function sketch(p5) {
 
     // Draw the histogram for the average of the three color channels
     if (selected_histogram == 0 || selected_histogram == 4) {
-      printHistogramArray(histograms[0], color(90, 90, 90, 70));
+      printHistogramArray(histograms[0], p5.color(90, 90, 90, 70));
       selected_histogram != 4 ? name = "Average" : name = "Mixed";
     }
     // Draw the histogram for the red channel
     if (selected_histogram == 1 || selected_histogram == 4) {
-      printHistogramArray(histograms[1], color(255, 0, 0, 70));
+      printHistogramArray(histograms[1], p5.color(255, 0, 0, 70));
       selected_histogram != 4 ? name = "Red" : name;
     }
     // Draw the histogram for the green channel
     if (selected_histogram == 2 || selected_histogram == 4) {
-      printHistogramArray(histograms[2], color(0, 255, 0, 70));
+      printHistogramArray(histograms[2], p5.color(0, 255, 0, 70));
       selected_histogram != 4 ? name = "Green" : name;
     }
     // Draw the histogram for the blue channel
     if (selected_histogram == 3 || selected_histogram == 4) {
-      printHistogramArray(histograms[3], color(0, 0, 255, 70));
+      printHistogramArray(histograms[3], p5.color(0, 0, 255, 70));
       selected_histogram != 4 ? name = "Blue" : name;
     }
 
@@ -410,7 +416,7 @@ function sketch(p5) {
    * @param {object} image - The image to which the convolution mask is applied
   */
   function convolveImage(image) {
-    let buffer = createGraphics(image.width, image.height, p5.WEBGL);
+    let buffer = p5.createGraphics(image.width, image.height, p5.WEBGL);
 
     // Copy the shader to the buffer's context
     let copiedShader = kernel_shader.copyToContext(buffer);
@@ -440,7 +446,7 @@ function sketch(p5) {
 
 
   function applyBrightness() {
-    let buffer = createGraphics(masking_canvas.width, masking_canvas.height, p5.WEBGL);
+    let buffer = p5.createGraphics(CANVAS_SIZE, CANVAS_SIZE, p5.WEBGL);
 
     // Copy the shader to the buffer's context
     let copiedShader = brightness_shader.copyToContext(buffer);
@@ -474,8 +480,8 @@ function sketch(p5) {
   function handleFile(file) {
     if (file.type === 'image') {
       // get the new image, resize to the masking canvas size and push front to the ORIGINAL_IMAGES array
-      let img = loadImage(file.data, () => {
-        img.resize(width, height); // resize the image to the size of the canvas
+      let img = p5.loadImage(file.data, () => {
+        img.resize(p5.width, p5.height); // resize the image to the size of the canvas
         loaded_images.unshift(img);
         selected_image = 0;
 
@@ -555,8 +561,8 @@ function sketch(p5) {
   /**
  * Used to control multiple function in the program
 */
-  p5.keyPressed = (key) => {
-    switch (key) {
+  p5.keyPressed = () => {
+    switch (p5.key) {
       case 'f':
         switchMask();
         break;
@@ -606,7 +612,11 @@ function P5Sketch() {
     };
   }, []);
 
-  return <NextReactP5Wrapper sketch={sketch} rotation={rotation} />;
+  return ( 
+    <div id="canvas-container">
+      <NextReactP5Wrapper sketch={sketch} rotation={rotation} />
+    </div>
+  );
 }
 
 export default P5Sketch;
