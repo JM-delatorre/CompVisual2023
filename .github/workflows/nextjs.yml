@@ -33,12 +33,13 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./next-test-p5/
+        working-directory: ./next-test-p5
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Detect package manager
         id: detect-package-manager
+        working-directory: ./next-test-p5
         run: |
           if [ -f "${{ github.workspace }}/yarn.lock" ]; then
             echo "manager=yarn" >> $GITHUB_OUTPUT
