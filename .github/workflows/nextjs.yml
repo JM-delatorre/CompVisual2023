@@ -8,7 +8,6 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches:
-      - main
       - migrate-to-next
     
   # Allows you to run this workflow manually from the Actions tab
@@ -25,7 +24,10 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: false
-
+  
+defaults:
+ run:
+  working-directory: ./next-test-p5
 jobs:
   # Build job
   build:
