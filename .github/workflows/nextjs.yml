@@ -25,14 +25,15 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
   
-defaults:
-  run:
-    working-directory: ./next-test-p5/
+
 
 jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./next-test-p5/
     steps:
       - name: Checkout
         uses: actions/checkout@v3
